@@ -11,7 +11,7 @@
 	<key>createdby</key>
 	<string>Santhoshkumar Settipalli</string>
 	<key>description</key>
-	<string>List times that are not affected by any Kaals as per Hindu Astrology</string>
+	<string>List time slots in a day that are considered auspicious as per the Hindu Astrology</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
@@ -50,9 +50,9 @@
 				<key>scriptfile</key>
 				<string></string>
 				<key>subtext</key>
-				<string>Shows good times in a day</string>
+				<string>Show time slots in a day that are considered auspicious as per the Hindu Astrology.</string>
 				<key>title</key>
-				<string>Good Time of a day</string>
+				<string>Good time slots in a day</string>
 				<key>type</key>
 				<integer>0</integer>
 				<key>withspace</key>
