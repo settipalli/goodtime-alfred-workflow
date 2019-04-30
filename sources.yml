@@ -1,0 +1,9 @@
+calendar:
+  urltemplate: https://www.prokerala.com/general/calendar/date.php?year={}&month={}&day={}&la=&calendar=hindu&sb=1&loc={}
+location:
+  london:
+    num: 2643743
+    tz: Europe/London
+  bangalore:
+    num: 1277333
+    tz: Asia/Kolkata
