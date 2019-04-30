@@ -226,6 +226,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# notebooks
+notebook/
+
 # -------------------------
 # BEGIN Whitelisted Files
 # -------------------------
