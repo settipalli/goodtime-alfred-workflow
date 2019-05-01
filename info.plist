@@ -7,7 +7,21 @@
 	<key>category</key>
 	<string>Productivity</string>
 	<key>connections</key>
-	<dict/>
+	<dict>
+		<key>37590878-4B08-4F57-A8E4-FB14B973988B</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>D4066F4E-E5B8-4982-AA50-A5579530843E</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
 	<key>createdby</key>
 	<string>Santhoshkumar Settipalli</string>
 	<key>description</key>
@@ -32,7 +46,7 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>keyword</key>
-				<string>goodtime</string>
+				<string>gt</string>
 				<key>queuedelaycustom</key>
 				<integer>3</integer>
 				<key>queuedelayimmediatelyinitially</key>
@@ -44,7 +58,7 @@
 				<key>runningsubtext</key>
 				<string>Fetching good times</string>
 				<key>script</key>
-				<string>python goodtime.py $1</string>
+				<string>python app.py $1</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -65,6 +79,29 @@
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>open -na "Google Chrome" --args --incognito "{query}"</string>
+				<key>scriptargtype</key>
+				<integer>0</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>D4066F4E-E5B8-4982-AA50-A5579530843E</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string></string>
@@ -73,9 +110,16 @@
 		<key>37590878-4B08-4F57-A8E4-FB14B973988B</key>
 		<dict>
 			<key>xpos</key>
-			<integer>230</integer>
+			<integer>290</integer>
 			<key>ypos</key>
-			<integer>250</integer>
+			<integer>210</integer>
+		</dict>
+		<key>D4066F4E-E5B8-4982-AA50-A5579530843E</key>
+		<dict>
+			<key>xpos</key>
+			<integer>490</integer>
+			<key>ypos</key>
+			<integer>210</integer>
 		</dict>
 	</dict>
 	<key>webaddress</key>
