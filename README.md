@@ -4,19 +4,19 @@ Alfred workflow that displays good times in a day based on Hindu Astrology.
 
 # Screenshots
 
-![Good Time - Alfred Workflow - Main Screen](screenshots/Screenshot_1?raw=true "Good Time - Alfred Workflow - Main Screen")
+![Good Time - Alfred Workflow - Main Screen](screenshots/Screenshot_1.png?raw=true "Good Time - Alfred Workflow - Main Screen")
 
-![Good Time - Alfred Workflow - Search string - month followed by date](screenshots/Screenshot_2?raw=true "Good Time - Alfred Workflow - Search string - month followed by date")
+![Good Time - Alfred Workflow - Search string - month followed by date](screenshots/Screenshot_2.png?raw=true "Good Time - Alfred Workflow - Search string - month followed by date")
 
-![Good Time - Alfred Workflow - Search string - date followed by month](screenshots/Screenshot_3?raw=true "Good Time - Alfred Workflow - Search string - date followed by month")
+![Good Time - Alfred Workflow - Search string - date followed by month](screenshots/Screenshot_3.png?raw=true "Good Time - Alfred Workflow - Search string - date followed by month")
 
-![Good Time - Alfred Workflow - Search string - month, date followed by year](screenshots/Screenshot_4?raw=true "Good Time - Alfred Workflow - Search string - month, date followed by year")
+![Good Time - Alfred Workflow - Search string - month, date followed by year](screenshots/Screenshot_4.png?raw=true "Good Time - Alfred Workflow - Search string - month, date followed by year")
 
-![Good Time - Alfred Workflow - Search string - year, month followed by date](screenshots/Screenshot_5?raw=true "Good Time - Alfred Workflow - Search string - year, month followed by date")
+![Good Time - Alfred Workflow - Search string - year, month followed by date](screenshots/Screenshot_5.png?raw=true "Good Time - Alfred Workflow - Search string - year, month followed by date")
 
-![Good Time - Alfred Workflow - Search string - date, month, year separated by a dash](screenshots/Screenshot_6?raw=true "Good Time - Alfred Workflow - Search string - date, month, year separated by a dash")
+![Good Time - Alfred Workflow - Search string - date, month, year separated by a dash](screenshots/Screenshot_6.png?raw=true "Good Time - Alfred Workflow - Search string - date, month, year separated by a dash")
 
-![Good Time - Alfred Workflow - Search string - date, month, year separated by a space](screenshots/Screenshot_7?raw=true "Good Time - Alfred Workflow - Search string - date, month, year separated by a space")
+![Good Time - Alfred Workflow - Search string - date, month, year separated by a space](screenshots/Screenshot_7.png?raw=true "Good Time - Alfred Workflow - Search string - date, month, year separated by a space")
 
 # Credits
 
