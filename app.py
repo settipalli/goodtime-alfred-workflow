@@ -65,7 +65,7 @@ class Interval:
 # == Helper routines
 
 def try_strptime(s, given, fmts=None):
-    fmts = fmts if fmts else ['%I:%M %p', '%b %d %I:%M %p', '%b%d', '%b%d%Y', '%Y%b%d', '%d%b']
+    fmts = fmts if fmts else ['%I:%M %p', '%b %d %I:%M %p', '%b%d', '%d%b', '%b%d%Y', '%Y%b%d', '%d%b%Y', '%d%Y%b']
     for fmt in fmts:
         try:
             dt = datetime.datetime.strptime(s, fmt)
