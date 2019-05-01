@@ -18,6 +18,7 @@ import os
 import re
 import sys
 from functools import total_ordering
+from pprint import pformat
 
 import pytz
 import requests
@@ -318,11 +319,17 @@ def main(wf):
     intervals = wf.cached_data(cache_name, get_data_helper, max_age=cache_ttl, data_func_args=args)
 
     wf.add_item(
+        title=u'Copy to clipboard',
+        icon=os.path.join('icons', 'clipboard.png'),
+        arg=unicode(pformat(intervals, indent=2)), # tell alfred to pass the url to the next action in the workflow
+        valid=True
+    )
+
+    wf.add_item(
         title=u'Open calendar',
         subtitle=unicode(url),
         icon='icon.png',
-        arg='https://www.prokerala.com/general/calendar/hinducalendar.php',
-        # tell alfred to pass the url to the next action in the workflow
+        arg='https://www.prokerala.com/general/calendar/hinducalendar.php', # tell alfred to pass the url to the next action in the workflow
         valid=True
     )
 
@@ -353,9 +360,7 @@ def main(wf):
                 wf.add_item(
                     title=unicode(title),
                     subtitle=unicode('{} - {}, {} {}, {}'.format(key, day, month, date, year)),
-                    icon=icons[key],
-                    # arg='some-link',  # tell alfred to pass the url to the next action in the workflow
-                    # valid=True
+                    icon=icons[key]
                 )
         except:
             log.debug("Key not found: {}".format(key))

@@ -8,11 +8,62 @@
 	<string>Productivity</string>
 	<key>connections</key>
 	<dict>
-		<key>37590878-4B08-4F57-A8E4-FB14B973988B</key>
+		<key>0D4D577A-C2F0-458A-920B-9BCCAB1D816D</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
 				<string>D4066F4E-E5B8-4982-AA50-A5579530843E</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>37590878-4B08-4F57-A8E4-FB14B973988B</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>F3EA40D7-16CD-49CD-A0A7-76412FEE8EC1</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>D4066F4E-E5B8-4982-AA50-A5579530843E</key>
+		<array/>
+		<key>F3EA40D7-16CD-49CD-A0A7-76412FEE8EC1</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>0D4D577A-C2F0-458A-920B-9BCCAB1D816D</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>FF9A2891-4847-42AA-B43C-1145102FEE15</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>FF9A2891-4847-42AA-B43C-1145102FEE15</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>EA17F612-F833-49DA-95EC-611DFCB770D8</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -32,6 +83,48 @@
 	<string>GoodTime</string>
 	<key>objects</key>
 	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>open -na "Google Chrome" --args --incognito "{query}"</string>
+				<key>scriptargtype</key>
+				<integer>0</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>D4066F4E-E5B8-4982-AA50-A5579530843E</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>inputstring</key>
+				<string>{query}</string>
+				<key>matchcasesensitive</key>
+				<false/>
+				<key>matchmode</key>
+				<integer>2</integer>
+				<key>matchstring</key>
+				<string>^https:</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.filter</string>
+			<key>uid</key>
+			<string>0D4D577A-C2F0-458A-920B-9BCCAB1D816D</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -82,44 +175,103 @@
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>open -na "Google Chrome" --args --incognito "{query}"</string>
-				<key>scriptargtype</key>
-				<integer>0</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>0</integer>
+				<key>argument</key>
+				<string>{query}</string>
+				<key>variables</key>
+				<dict>
+					<key>query</key>
+					<string>{query}</string>
+				</dict>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.action.script</string>
+			<string>alfred.workflow.utility.argument</string>
 			<key>uid</key>
-			<string>D4066F4E-E5B8-4982-AA50-A5579530843E</string>
+			<string>F3EA40D7-16CD-49CD-A0A7-76412FEE8EC1</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>autopaste</key>
+				<false/>
+				<key>clipboardtext</key>
+				<string>{var:query}</string>
+				<key>transient</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.clipboard</string>
+			<key>uid</key>
+			<string>EA17F612-F833-49DA-95EC-611DFCB770D8</string>
 			<key>version</key>
 			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>inputstring</key>
+				<string>{query}</string>
+				<key>matchcasesensitive</key>
+				<false/>
+				<key>matchmode</key>
+				<integer>1</integer>
+				<key>matchstring</key>
+				<string>^https:</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.filter</string>
+			<key>uid</key>
+			<string>FF9A2891-4847-42AA-B43C-1145102FEE15</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 	</array>
 	<key>readme</key>
 	<string></string>
 	<key>uidata</key>
 	<dict>
+		<key>0D4D577A-C2F0-458A-920B-9BCCAB1D816D</key>
+		<dict>
+			<key>xpos</key>
+			<integer>430</integer>
+			<key>ypos</key>
+			<integer>90</integer>
+		</dict>
 		<key>37590878-4B08-4F57-A8E4-FB14B973988B</key>
 		<dict>
 			<key>xpos</key>
-			<integer>290</integer>
+			<integer>100</integer>
 			<key>ypos</key>
-			<integer>210</integer>
+			<integer>140</integer>
 		</dict>
 		<key>D4066F4E-E5B8-4982-AA50-A5579530843E</key>
 		<dict>
 			<key>xpos</key>
-			<integer>490</integer>
+			<integer>560</integer>
 			<key>ypos</key>
-			<integer>210</integer>
+			<integer>60</integer>
+		</dict>
+		<key>EA17F612-F833-49DA-95EC-611DFCB770D8</key>
+		<dict>
+			<key>xpos</key>
+			<integer>560</integer>
+			<key>ypos</key>
+			<integer>240</integer>
+		</dict>
+		<key>F3EA40D7-16CD-49CD-A0A7-76412FEE8EC1</key>
+		<dict>
+			<key>xpos</key>
+			<integer>280</integer>
+			<key>ypos</key>
+			<integer>170</integer>
+		</dict>
+		<key>FF9A2891-4847-42AA-B43C-1145102FEE15</key>
+		<dict>
+			<key>xpos</key>
+			<integer>430</integer>
+			<key>ypos</key>
+			<integer>270</integer>
 		</dict>
 	</dict>
 	<key>webaddress</key>
