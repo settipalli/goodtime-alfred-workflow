@@ -1,5 +1,6 @@
 calendar:
   urltemplate: https://www.prokerala.com/general/calendar/date.php?year={}&month={}&day={}&la=&calendar=hindu&sb=1&loc={}
+  cachettl: 2592000
 location:
   london:
     num: 2643743
@@ -7,3 +8,6 @@ location:
   bangalore:
     num: 1277333
     tz: Asia/Kolkata
+icon:
+  positive: positive.png
+  negative: negative.png
