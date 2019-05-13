@@ -340,8 +340,8 @@ def main(wf):
         'Varjyam': os.path.join('icons', config['icon']['negative']),
         'Yamaganda': os.path.join('icons', config['icon']['negative']),
         'Gulika': os.path.join('icons', config['icon']['negative']),
-        'Amrit Kaal': os.path.join('icons', config['icon']['positive']),
-        'Abhijit Muhurat': os.path.join('icons', config['icon']['positive'])
+        'Amrit Kaal': os.path.join('icons', config['icon']['bottle']),
+        'Abhijit Muhurat': os.path.join('icons', config['icon']['bottle'])
     }
 
     # order of keys decide the order of results.

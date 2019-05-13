@@ -6,12 +6,15 @@ Alfred workflow that displays good times in a day based on Hindu Astrology.
 # Credits
 
 **Icon:**
+- Icons made by [Eucalyp](https://www.flaticon.com/authors/eucalyp) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/).
 - Icons made by [Freepik](https://www.freepik.com/) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/).
 - Icons made by [Smashicons](https://www.flaticon.com/authors/smashicons) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/).
 - Icons made by [Icongeek26](https://www.flaticon.com/authors/icongeek26) from [www.flaticon.com](https://www.flaticon.com/) is licensed by [CC 3.0 BY](http://creativecommons.org/licenses/by/3.0/).
 
 
 # Screenshots
+
+![Good Time - Alfred Workflow - Main Screen with new Icon](screenshots/Screenshot_9.png?raw=true "Good Time - Alfred Workflow - Main Screen with new Icon")
 
 ![Good Time - Alfred Workflow - Main Screen](screenshots/Screenshot_1.png?raw=true "Good Time - Alfred Workflow - Main Screen")
 

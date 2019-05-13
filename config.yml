@@ -9,5 +9,6 @@ location:
     num: 1277333
     tz: Asia/Kolkata
 icon:
+  bottle: bottle.png
   positive: positive.png
   negative: negative.png
