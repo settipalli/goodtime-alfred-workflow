@@ -14,6 +14,7 @@ Options:
 """
 
 import datetime
+import copy
 import os
 import re
 import sys
@@ -267,7 +268,8 @@ def find_free_time(day, given):
     merged_intervals.append(Interval(next_day, next_day + datetime.timedelta(seconds=1)))
 
     for key in timezones:
-        merged_intervals.extend(day[key])
+        merged_intervals.extend(copy.deepcopy(day[key])) # deepcopy, else it would be a shallow copy and
+                                                         # sort_and_normalize method below would modify the contents.
 
     merged_intervals = sort_and_normalize(merged_intervals, given)
 
