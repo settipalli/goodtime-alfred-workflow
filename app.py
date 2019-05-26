@@ -71,9 +71,12 @@ def try_strptime(s, given, fmts=None):
     for fmt in fmts:
         try:
             dt = datetime.datetime.strptime(s, fmt)
-            if (dt.year <= 1900 and dt.year != given.year): dt = dt.replace(year=given.year)
-            if (dt.month == 1 and dt.month != given.month): dt = dt.replace(month=given.month)
-            if (dt.day == 1 and dt.day != given.day): dt = dt.replace(day=given.day)
+            if '%Y' not in fmt:
+                dt = dt.replace(year=given.year)
+            if '%b' not in fmt:
+                dt = dt.replace(month=given.month)
+            if '%d' not in fmt:
+                dt = dt.replace(day=given.day)
             return timezone.localize(dt)
         except:
             continue
@@ -207,8 +210,11 @@ def build_intervals(data, date):
     for k, l in data['important_timings'].items():
         intervals = []
         for slist in l:
+            parenthesis_index = slist.rfind('(')
+            if parenthesis_index > 0:
+                slist = slist[:parenthesis_index].strip()
             s = slist.split(u'–')
-            if (len(s) != 2): continue
+            if len(s) != 2: continue
             x = try_strptime(s[0].strip(), date)
             y = try_strptime(s[1].strip(), date)
             i = Interval(x, y)
@@ -229,7 +235,7 @@ def build_intervals(data, date):
     return day
 
 
-def sort_and_normalize(intervals, given_start_dt):
+def sort_and_normalize(intervals, given_start_dt, next_day):
     intervals.sort()
     # E.g. 2019-04-30 08:35:00 - 2019-04-30 09:34:00, 2019-04-30 09:19:00 - 2019-04-30 11:08:00
     # remove invalid intervals - i.e. any interval before the given_start_dt
@@ -238,6 +244,8 @@ def sort_and_normalize(intervals, given_start_dt):
         if interval.stop < given_start_dt: continue
         if interval.start < given_start_dt:
             interval.start = given_start_dt
+        if interval.start < next_day and interval.stop > next_day:
+            interval.stop = next_day
         clean_intervals.append(interval)
 
     x = clean_intervals[0]
@@ -263,22 +271,25 @@ def find_free_time(day, given):
 
     timezones = ['Rahu', 'Yamaganda', 'Gulika', 'Dur Muhurat', 'Varjyam']
 
+    # merge all non-free intervals.
     merged_intervals = []
-    # adding a boundary condition so that the computation shows free time after the last interval
-    merged_intervals.append(Interval(next_day, next_day + datetime.timedelta(seconds=1)))
+
+    # if you do not add the end datetime, the computation will not show the free time after the last interval until the
+    # next day
+    merged_intervals.append(Interval(next_day - datetime.timedelta(seconds=1), next_day))
 
     for key in timezones:
         merged_intervals.extend(copy.deepcopy(day[key])) # deepcopy, else it would be a shallow copy and
                                                          # sort_and_normalize method below would modify the contents.
 
-    merged_intervals = sort_and_normalize(merged_intervals, given)
+    merged_intervals = sort_and_normalize(merged_intervals, given, next_day)
 
     for interval in merged_intervals:
+        if given >= next_day: break # some intervals will be on next day and we do not need to compute free time for those
         delta = interval.start - given
-        if (delta.seconds > 0):
-            free_time_intervals.append(Interval(given, interval.start - datetime.timedelta(
-                seconds=1)))  # go back one second (substract timedelta)
-        given = interval.stop + datetime.timedelta(seconds=1)  # go forward 1 second (add timedelta)
+        if delta.seconds > 0:
+            free_time_intervals.append(Interval(given, interval.start))  # go back one second (substract timedelta)
+        given = interval.stop  # go forward 1 second (add timedelta)
 
     free_time_intervals.sort()
     return free_time_intervals
@@ -342,26 +353,31 @@ def main(wf):
         'Varjyam': os.path.join('icons', config['icon']['negative']),
         'Yamaganda': os.path.join('icons', config['icon']['negative']),
         'Gulika': os.path.join('icons', config['icon']['negative']),
+        'Ganda Mool Nakshatra': os.path.join('icons', config['icon']['negative']),
         'Amrit Kaal': os.path.join('icons', config['icon']['bottle']),
         'Abhijit Muhurat': os.path.join('icons', config['icon']['bottle'])
     }
 
     # order of keys decide the order of results.
-    keys = ['Free', 'Amrit Kaal', 'Abhijit Muhurat', 'Rahu', 'Dur Muhurat', 'Varjyam', 'Yamaganda', 'Gulika']
+    keys = ['Free', 'Amrit Kaal', 'Abhijit Muhurat', 'Ganda Mool Nakshatra', 'Rahu', 'Dur Muhurat', 'Varjyam', 'Yamaganda', 'Gulika']
     # Good time
     for key in keys:
         try:
             for interval in intervals[key]:
                 # compute delta hours and mins
-                seconds = (interval.stop - interval.start).seconds
-                hours = seconds / 60 / 60
-                minutes = (seconds / 60) - (hours * 60)
-                day, date, month, year = interval.start.strftime('%a-%d-%b-%Y').split('-')
+                delta = interval.stop - interval.start
+                seconds = delta.days * 86400 + delta.seconds
+                hours = seconds // 3600
+                minutes = (seconds // 60) % 60
                 title = '{} - {} ({}h {}m)'.format(interval.start.strftime('%I:%M %p'), interval.stop.strftime('%I:%M %p'),
                                                    hours, minutes)
+                subtitle = interval.start.strftime('%a, %b %d, %Y')
+                if seconds >= 86400:
+                    subtitle = '{} to {}'.format(subtitle, interval.stop.strftime('%a, %b %d, %Y'))
+
                 wf.add_item(
                     title=unicode(title),
-                    subtitle=unicode('{} - {}, {} {}, {}'.format(key, day, month, date, year)),
+                    subtitle=unicode('{} - {}'.format(key, subtitle)),
                     icon=icons[key]
                 )
         except:
