@@ -325,7 +325,7 @@ def main(wf):
     cache_name = date.strftime('%Y-%b-%d')
     cache_ttl = config['calendar']['cachettl']
     url = config["calendar"]["urltemplate"].format(date.year, date.month, date.day,
-                                                   config['location']['london']['num'])
+                                                   config['location']['bangalore']['num'])
     log.debug("URL: {!r}".format(url))
 
     args = [date, url]
@@ -392,5 +392,5 @@ if __name__ == u'__main__':
     wf = Workflow3()
     log = wf.logger
     config = yaml.safe_load(open("config.yml"))
-    timezone = pytz.timezone(config['location']['london']['tz'])
+    timezone = pytz.timezone(config['location']['bangalore']['tz'])
     sys.exit(wf.run(main))
