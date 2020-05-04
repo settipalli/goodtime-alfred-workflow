@@ -2,6 +2,9 @@
 .*
 ~*
 
+# ignore local settings
+.local.yml
+
 # ignore composer vendor directory
 /vendor
 

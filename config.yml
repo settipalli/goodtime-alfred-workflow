@@ -1,5 +1,5 @@
 calendar:
-  urltemplate: https://www.prokerala.com/general/calendar/date.php?year={}&month={}&day={}&la=&calendar=hindu&sb=1&loc={}
+  urltemplate: https://www.prokerala.com/general/calendar/date.php?theme=unity&year={}&month={}&day={}&la=&calendar=hindu&la=&sb=1&loc={}
   cachettl: 2592000
 location:
   london:
@@ -8,6 +8,9 @@ location:
   bangalore:
     num: 1277333
     tz: Asia/Kolkata
+  amsterdam:
+    num: 2759794
+    tz: Europe/Amsterdam  # https://stackoverflow.com/questions/13866926/is-there-a-list-of-pytz-timezones
 icon:
   bottle: bottle.png
   positive: positive.png

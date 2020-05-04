@@ -32,6 +32,7 @@ from workflow import Workflow3
 log = None
 config = None
 timezone = None
+location = None
 
 
 # == Interval data model
@@ -188,11 +189,10 @@ def download_and_parse_data(url):
     headers = {
         'accept-encoding': 'gzip, deflate, br',
         'accept-language': 'en-US,en',
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
+        'user-agent': 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36',
         'accept': '*/*',
         'referer': 'https://www.prokerala.com/general/calendar/hinducalendar.php',
-        'authority': 'www.prokerala.com',
-        'x-requested-with': 'XMLHttpRequest'
+        'authority': 'www.prokerala.com'
     }
 
     data = {}
@@ -359,7 +359,7 @@ def main(wf):
             cache_name = temp_date.strftime('%Y-%b-%d')
             cache_ttl = config['calendar']['cachettl']
             url = config["calendar"]["urltemplate"].format(temp_date.year, temp_date.month, temp_date.day,
-                                                           config['location']['bangalore']['num'])
+                                                           location['num'])
             log.debug("URL: {!r}".format(url))
 
             args = [temp_date, url]
@@ -397,6 +397,11 @@ def main(wf):
 if __name__ == u'__main__':
     wf = Workflow3()
     log = wf.logger
-    config = yaml.safe_load(open("config.yml"))
-    timezone = pytz.timezone(config['location']['bangalore']['tz'])
+    config = yaml.safe_load(open('config.yml'))
+    local_settings = yaml.safe_load(open('.local.yml'))
+    chosen_location = 'bangalore' if 'chosen_timezone' not in \
+                                     local_settings.keys() else \
+                                     local_settings['chosen_timezone'].strip()
+    location = config['location'][chosen_location]
+    timezone = pytz.timezone(location['tz'])
     sys.exit(wf.run(main))

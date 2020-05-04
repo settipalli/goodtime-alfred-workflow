@@ -31,6 +31,7 @@ from workflow import Workflow3
 log = None
 config = None
 timezone = None
+location = None
 
 
 # == Interval data model
@@ -88,10 +89,10 @@ def try_strptime(s, given, fmts=None):
 
 def parse_data(soup):
     master_data = soup.select('div.cal-box.calendar-box')
-
-    panchang = master_data[0].find('table')
-    important_timings = master_data[2].find_all('div')
-    other_timings = master_data[3].find_all('div')
+    day_details = soup.select('div.calendar-current-date')
+    panchang = soup.select('div.calendar-panchang-details')
+    important_timings = soup.select('div.calendar-sun-moon-details')
+    other_timings = soup.select('div.item-block')
     sun_rise_set = master_data[4]
     moon_rise_set = master_data[5]
 
@@ -187,11 +188,10 @@ def download_and_parse_data(url):
     headers = {
         'accept-encoding': 'gzip, deflate, br',
         'accept-language': 'en-US,en',
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36',
+        'user-agent': 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36',
         'accept': '*/*',
         'referer': 'https://www.prokerala.com/general/calendar/hinducalendar.php',
-        'authority': 'www.prokerala.com',
-        'x-requested-with': 'XMLHttpRequest'
+        'authority': 'www.prokerala.com'
     }
 
     data = {}
@@ -324,8 +324,10 @@ def main(wf):
 
     cache_name = date.strftime('%Y-%b-%d')
     cache_ttl = config['calendar']['cachettl']
-    url = config["calendar"]["urltemplate"].format(date.year, date.month, date.day,
-                                                   config['location']['bangalore']['num'])
+    url = config["calendar"]["urltemplate"].format(date.year,
+                                                   date.month,
+                                                   date.day,
+                                                   location['num'])
     log.debug("URL: {!r}".format(url))
 
     args = [date, url]
@@ -369,8 +371,10 @@ def main(wf):
                 seconds = delta.days * 86400 + delta.seconds
                 hours = seconds // 3600
                 minutes = (seconds // 60) % 60
-                title = '{} - {} ({}h {}m)'.format(interval.start.strftime('%I:%M %p'), interval.stop.strftime('%I:%M %p'),
-                                                   hours, minutes)
+                title = '{} - {} ({}h {}m)'.format(interval.start.strftime('%I:%M %p'),
+                                                   interval.stop.strftime('%I:%M %p'),
+                                                   hours,
+                                                   minutes)
                 subtitle = interval.start.strftime('%a, %b %d, %Y')
                 if seconds >= 86400:
                     subtitle = '{} to {}'.format(subtitle, interval.stop.strftime('%a, %b %d, %Y'))
@@ -391,6 +395,12 @@ def main(wf):
 if __name__ == u'__main__':
     wf = Workflow3()
     log = wf.logger
-    config = yaml.safe_load(open("config.yml"))
-    timezone = pytz.timezone(config['location']['bangalore']['tz'])
+    config = yaml.safe_load(open('config.yml'))
+    local_settings = yaml.safe_load(open('.local.yml'))
+    chosen_location = 'bangalore' if 'chosen_timezone' not in \
+                                     local_settings.keys() else \
+                                     local_settings['chosen_timezone'].strip()
+    location = config['location'][chosen_location]
+    timezone = pytz.timezone(location['tz'])
     sys.exit(wf.run(main))
+
