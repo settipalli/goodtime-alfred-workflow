@@ -1,6 +1,6 @@
 # Good Time
 
-Alfred workflow that displays good times in a day based on Hindu Astrology.
+Alfred workflow that displays good times in a day based on Hindu Calendar.
 
 
 # Credits
