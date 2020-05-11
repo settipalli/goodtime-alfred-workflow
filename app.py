@@ -304,31 +304,37 @@ def get_data_helper(date, url):
     return results
 
 
-def main(wf):
-    args = docopt(__doc__, wf.args, version='v0.9.0')
-    log.debug('args : {!r}'.format(args))
-
-    date = args.get('<date>')
+def parse_date(arguments):
+    '''
+    Retrieves date from args, parses it and returns a valid python datetime
+    '''
+    date = arguments.get('<date>')
     today = timezone.localize(datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0))
 
     if len(date) > 0:
-        date = re.sub(r'[^\w\s]', '', date)
-        date = try_strptime(date, today)
+       date = re.sub(r'[^\w\s]', '', date)
+       date = try_strptime(date, today)
     else:
-        date = today
+       date = today
 
     if date is None:
-        date = today
+       date = today
 
-    log.debug('date: {!r}'.format(date))
+    # log.debug('date: {!r}'.format(date))
+    return date
 
+
+def main(wf):
+    args = docopt(__doc__, wf.args, version='v0.9.0')
+    # log.debug('args : {!r}'.format(args))
+
+    date = parse_data(args)
+
+    # configure cache name based on the input (date)
     cache_name = date.strftime('%Y-%b-%d')
     cache_ttl = config['calendar']['cachettl']
-    url = config["calendar"]["urltemplate"].format(date.year,
-                                                   date.month,
-                                                   date.day,
-                                                   location['num'])
-    log.debug("URL: {!r}".format(url))
+    url = config["calendar"]["urltemplate"].format(date.year, date.month, date.day, location['num'])
+    # log.debug("URL: {!r}".format(url))
 
     args = [date, url]
     intervals = wf.cached_data(cache_name, get_data_helper, max_age=cache_ttl, data_func_args=args)
