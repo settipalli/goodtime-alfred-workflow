@@ -88,99 +88,41 @@ def try_strptime(s, given, fmts=None):
 # == Fetch and parse data
 
 def parse_data(soup):
-    master_data = soup.select('div.cal-box.calendar-box')
-    day_details = soup.select('div.calendar-current-date')
-    panchang = soup.select('div.calendar-panchang-details')
-    important_timings = soup.select('div.calendar-sun-moon-details')
-    other_timings = soup.select('div.item-block')
-    sun_rise_set = master_data[4]
-    moon_rise_set = master_data[5]
+    contents = soup.findAll('div', class_='current-date-info')
 
-    # ------------
+    # important_timings
+    important_timings = {}
+    tag_text = ('Dur Muhurat', 'Amrit Kaal', 'Varjyam', 'Ganda Mool Nakshatra')
+    spans = contents[2].findAll('span')
+    for span in spans:
+        if not span.text.strip() in tag_text: continue # filter out span with 'Nil' value
+        key = span.text.strip()
+        res = span.parent.findChildren('li') # returns a ResultSet and each element is a Tag
+        values = []
+        for li in res:
+            v = re.sub(r'^\s*[0-9]\.\s*|\s*$', '', li.text, flags=re.UNICODE).strip()
+            values.append(v if v != 'Nil' else [])
+        important_timings[key] = values
 
-    panchang_data = {}
-    for row in panchang.find_all('tr'):
-        first_column = row.find('th').contents[0].strip()
-        second_column = []
+    # Special - Abhijit Muhurtha
+    key = 'Abhijit Muhurat'
+    value = contents[2].find('h5', text=re.compile(key)).find_next('span').text.strip()
+    important_timings[key] = value if value != 'Nil' else [] # it is value, not values, can be 'Nil' (str)
 
-        for div in row.find('td').find_all('div'):
-            second_column.append(' '.join(div.text.split()))
-
-        if len(second_column) == 0:
-            second_column = [row.select('td')[0].contents[0].strip()]
-
-        panchang_data[first_column] = second_column
-
-    # ------------
-
-    important_timings_data = {}
-    for div in important_timings:
-        try:
-            key = div.span.text.strip()
-            values = []
-            for li in div.ul.find_all('li'):
-                values.append(re.sub(r'^\s*[0-9]\.\s*|\s*$', '', li.text, flags=re.UNICODE))
-            important_timings_data[key] = values
-        except:
-            pass
-
-    # ------------
-
-    other_timings_data = {}
-
-    for row in other_timings[0].find('table').find_all('tr'):
-        first_column = row.find('th').contents[0].strip()
-        second_column = row.find('td').contents[0].strip()
-        other_timings_data[first_column] = second_column
-
-    # Abhijit Muhurata
-    key = other_timings[1].find('h5').text.strip()
-    value = [other_timings[1].contents[2].strip()]
-    important_timings_data[key] = value
-
-    # ------------
-
-    sun_rise_set_data = {}
-
-    sun_rise_data = sun_rise_set.find('div', class_='day-sunrise')
-    key = sun_rise_data.span.contents[0].strip()
-    value = sun_rise_data.span.contents[2].strip()
-
-    sun_rise_set_data[key] = value
-
-    sun_set_data = sun_rise_set.find('div', class_='day-sunset')
-    key = sun_set_data.span.contents[0].strip()
-    value = sun_set_data.span.contents[2].strip()
-
-    sun_rise_set_data[key] = value
-
-    # ------------
-
-    moon_rise_set_data = {}
-
-    moon_rise_data = moon_rise_set
-
-    moon_rise_data = moon_rise_set.find('div', class_='day-moonrise')
-    key = moon_rise_data.span.contents[0].strip()
-    value = moon_rise_data.span.contents[2].strip()
-
-    moon_rise_set_data[key] = value
-
-    moon_set_data = moon_rise_set.find('div', class_='day-moonset')
-    key = moon_set_data.span.contents[0].strip()
-    value = moon_set_data.span.contents[2].strip()
-
-    moon_rise_set_data[key] = value
-
-    # ------------
+    # other_timings
+    other_timings = {}
+    trs = contents[2].findAll('tr')
+    for tr in trs:
+        key = tr.td.text.strip()
+        value = tr.td.find_next('td').text.strip()
+        other_timings[key] = value
 
     data = {}
-    data['panchang'] = panchang_data
-    data['important_timings'] = important_timings_data
-    data['other_timings'] = other_timings_data
-    data['sun_timings'] = sun_rise_set_data
-    data['moon_timings'] = moon_rise_set_data
-
+    # data['panchang'] = panchang_data
+    data['important_timings'] = important_timings
+    data['other_timings'] = other_timings
+    # data['sun_timings'] = sun_rise_set_data
+    # data['moon_timings'] = moon_rise_set_data
     return data
 
 
