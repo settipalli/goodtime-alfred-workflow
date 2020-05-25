@@ -88,7 +88,7 @@ def try_strptime(s, given, fmts=None):
 # == Fetch and parse data
 
 def parse_data(soup):
-    contents = soup.findAll('div', class_='current-date-info')
+    contents = soup.find_all('div', class_='current-date-info')
 
     # important_timings
     important_timings = {}
@@ -270,7 +270,7 @@ def main(wf):
     args = docopt(__doc__, wf.args, version='v0.9.0')
     # log.debug('args : {!r}'.format(args))
 
-    date = parse_data(args)
+    date = parse_date(args)
 
     # configure cache name based on the input (date)
     cache_name = date.strftime('%Y-%b-%d')
