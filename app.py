@@ -90,6 +90,16 @@ def try_strptime(s, given, fmts=None):
 def parse_data(soup):
     contents = soup.find_all('div', class_='current-date-info')
 
+    # panchang
+    panchang_data = {}
+    trs = contents[1].findAll('tr')
+    for tr in trs:
+        key = tr.th.text.strip()
+        value = tr.td.text.strip()
+        # multiple newlines with space (prefix or suffix) to a ', '
+        value = re.sub(' *\n+ *', ', ', value)
+        panchang_data[key] = value
+
     # important_timings
     important_timings = {}
     tag_text = ('Dur Muhurat', 'Amrit Kaal', 'Varjyam', 'Ganda Mool Nakshatra')
@@ -118,7 +128,7 @@ def parse_data(soup):
         other_timings[key] = value
 
     data = {}
-    # data['panchang'] = panchang_data
+    data['panchang'] = panchang_data
     data['important_timings'] = important_timings
     data['other_timings'] = other_timings
     # data['sun_timings'] = sun_rise_set_data
@@ -241,8 +251,9 @@ def get_data_helper(date, url):
     data = download_and_parse_data(url)
     day_intervals = build_intervals(data, date)
     free_time_intervals = find_free_time(day_intervals, date)
-    results = {'Free': free_time_intervals}
+    results = {u'Free': free_time_intervals}
     results.update(day_intervals)
+    results[u'Panchang'] = data['panchang']
     return results
 
 
@@ -280,6 +291,7 @@ def main(wf):
 
     args = [date, url]
     intervals = wf.cached_data(cache_name, get_data_helper, max_age=cache_ttl, data_func_args=args)
+    # set max_age = 1 to invalidate the cache for a given entry, run the program and set it back to cache_ttl
 
     wf.add_item(
         title=u'Copy to clipboard',
@@ -334,6 +346,13 @@ def main(wf):
                 )
         except:
             log.debug("Key not found: {}".format(key))
+
+    # add Panchang
+    for key, value in intervals['Panchang'].items():
+        wf.add_item(
+            title=unicode(value),
+            subtitle=unicode(key),
+        )
 
     # send results to Alfred as JSON
     wf.send_feedback()
