@@ -105,9 +105,9 @@ def parse_data(soup):
     tag_text = ('Dur Muhurat', 'Amrit Kaal', 'Varjyam', 'Ganda Mool Nakshatra')
     spans = contents[2].findAll('span')
     for span in spans:
-        if not span.text.strip() in tag_text: continue # filter out span with 'Nil' value
+        if not span.text.strip() in tag_text: continue  # filter out span with 'Nil' value
         key = span.text.strip()
-        res = span.parent.findChildren('li') # returns a ResultSet and each element is a Tag
+        res = span.parent.findChildren('li')  # returns a ResultSet and each element is a Tag
         values = []
         for li in res:
             v = re.sub(r'^\s*[0-9]\.\s*|\s*$', '', li.text, flags=re.UNICODE).strip()
@@ -116,8 +116,12 @@ def parse_data(soup):
 
     # Special - Abhijit Muhurtha
     key = 'Abhijit Muhurat'
-    value = contents[2].find('h5', text=re.compile(key)).find_next('span').text.strip()
-    important_timings[key] = value if value != 'Nil' else [] # it is value, not values, can be 'Nil' (str)
+    # value = contents[2].find('h5', text=re.compile(key)).find_next('span').text.strip()
+    # the time text is usually the second string (after the <h5> heading)
+    # value = list(contents[2].find('h5', text=re.compile(key)).parent.stripped_strings)[1].strip() # creates a value similar to 'Sunrise06.24 AM' because it is searching for span element which does not exist.
+    # the time text is usually the second string (after the <h5> heading)
+    value = list(contents[2].find('h5', text=re.compile(key)).parent.stripped_strings)[1].strip()
+    important_timings[key] = value if value != 'Nil' else []  # it is value, not values, can be 'Nil' (str)
 
     # other_timings
     other_timings = {}
@@ -161,16 +165,28 @@ def build_intervals(data, date):
     day = {}
     for k, l in data['important_timings'].items():
         intervals = []
+
+        if isinstance(l, unicode) or isinstance(l, str):
+            l = [l]  # in case of Abhijit Muhurat, l is string - u'12:35 PM – 01:28 PM'
+
         for slist in l:
             parenthesis_index = slist.rfind('(')
             if parenthesis_index > 0:
                 slist = slist[:parenthesis_index].strip()
             s = slist.split(u'–')
-            if len(s) != 2: continue
+            if len(s) != 2:
+                continue
+
             x = try_strptime(s[0].strip(), date)
             y = try_strptime(s[1].strip(), date)
+
+            # if y is less than x, it implies that x = PM and y = AM - ideally the next day - add a day to y
+            if y < x:
+                y += datetime.timedelta(days=1)
+
             i = Interval(x, y)
             intervals.append(i)
+
         intervals.sort()
         day[k] = intervals
 
@@ -201,7 +217,7 @@ def sort_and_normalize(intervals, given_start_dt, next_day):
         clean_intervals.append(interval)
 
     x = clean_intervals[0]
-    normalized_intervals = []
+    normalized_intervals = [] # merge overlapped intervals
     for y in clean_intervals[1:]:
         if y.start < x.stop:
             if y.stop > x.stop:
@@ -231,13 +247,13 @@ def find_free_time(day, given):
     merged_intervals.append(Interval(next_day - datetime.timedelta(seconds=1), next_day))
 
     for key in timezones:
-        merged_intervals.extend(copy.deepcopy(day[key])) # deepcopy, else it would be a shallow copy and
-                                                         # sort_and_normalize method below would modify the contents.
+        merged_intervals.extend(copy.deepcopy(day[key]))  # deepcopy, else it would be a shallow copy and
+        # sort_and_normalize method below would modify the contents.
 
     merged_intervals = sort_and_normalize(merged_intervals, given, next_day)
 
     for interval in merged_intervals:
-        if given >= next_day: break # some intervals will be on next day and we do not need to compute free time for those
+        if given >= next_day: break  # some intervals will be on next day and we do not need to compute free time for those
         delta = interval.start - given
         if delta.seconds > 0:
             free_time_intervals.append(Interval(given, interval.start))  # go back one second (substract timedelta)
@@ -265,13 +281,13 @@ def parse_date(arguments):
     today = timezone.localize(datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0))
 
     if len(date) > 0:
-       date = re.sub(r'[^\w\s]', '', date)
-       date = try_strptime(date, today)
+        date = re.sub(r'[^\w\s]', '', date)
+        date = try_strptime(date, today)
     else:
-       date = today
+        date = today
 
     if date is None:
-       date = today
+        date = today
 
     # log.debug('date: {!r}'.format(date))
     return date
@@ -296,7 +312,7 @@ def main(wf):
     wf.add_item(
         title=u'Copy to clipboard',
         icon=os.path.join('icons', 'clipboard.png'),
-        arg=unicode(pformat(intervals, indent=2)), # tell alfred to pass the url to the next action in the workflow
+        arg=unicode(pformat(intervals, indent=2)),  # tell alfred to pass the url to the next action in the workflow
         valid=True
     )
 
@@ -304,7 +320,8 @@ def main(wf):
         title=u'Open calendar',
         subtitle=unicode(url),
         icon='icon.png',
-        arg='https://www.prokerala.com/general/calendar/hinducalendar.php', # tell alfred to pass the url to the next action in the workflow
+        arg='https://www.prokerala.com/general/calendar/hinducalendar.php',
+        # tell alfred to pass the url to the next action in the workflow
         valid=True
     )
 
@@ -321,7 +338,8 @@ def main(wf):
     }
 
     # order of keys decide the order of results.
-    keys = ['Free', 'Amrit Kaal', 'Abhijit Muhurat', 'Ganda Mool Nakshatra', 'Rahu', 'Dur Muhurat', 'Varjyam', 'Yamaganda', 'Gulika']
+    keys = ['Free', 'Amrit Kaal', 'Abhijit Muhurat', 'Ganda Mool Nakshatra', 'Rahu', 'Dur Muhurat', 'Varjyam',
+            'Yamaganda', 'Gulika']
     # Good time
     for key in keys:
         try:
@@ -366,8 +384,7 @@ if __name__ == u'__main__':
     local_settings = yaml.safe_load(open('.local.yml'))
     chosen_location = 'bangalore' if 'chosen_timezone' not in \
                                      local_settings.keys() else \
-                                     local_settings['chosen_timezone'].strip()
+        local_settings['chosen_timezone'].strip()
     location = config['location'][chosen_location]
-    timezone = pytz.timezone(location['tz'])
+    timezone = pytz.timezone(location['tz']) # required to localize time - apply it on a date object
     sys.exit(wf.run(main))
-

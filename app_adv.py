@@ -96,9 +96,9 @@ def parse_data(soup):
     tag_text = ('Dur Muhurat', 'Amrit Kaal', 'Varjyam', 'Ganda Mool Nakshatra')
     spans = contents[2].findAll('span')
     for span in spans:
-        if not span.text.strip() in tag_text: continue # filter out span with 'Nil' value
+        if not span.text.strip() in tag_text: continue  # filter out span with 'Nil' value
         key = span.text.strip()
-        res = span.parent.findChildren('li') # returns a ResultSet and each element is a Tag
+        res = span.parent.findChildren('li')  # returns a ResultSet and each element is a Tag
         values = []
         for li in res:
             v = re.sub(r'^\s*[0-9]\.\s*|\s*$', '', li.text, flags=re.UNICODE).strip()
@@ -107,8 +107,10 @@ def parse_data(soup):
 
     # Special - Abhijit Muhurtha
     key = 'Abhijit Muhurat'
-    value = contents[2].find('h5', text=re.compile(key)).find_next('span').text.strip()
-    important_timings[key] = value if value != 'Nil' else [] # it is value, not values, can be 'Nil' (str)
+    # value = contents[2].find('h5', text=re.compile(key)).find_next('span').text.strip() #  a value similar to 'Sunrise06.24 AM' because it is searching for span element which does not exist.
+    # the time text is usually the second string (after the <h5> heading)
+    value = list(contents[2].find('h5', text=re.compile(key)).parent.stripped_strings)[1].strip()
+    important_timings[key] = value if value != 'Nil' else []  # it is value, not values, can be 'Nil' (str)
 
     # other_timings
     other_timings = {}
@@ -152,16 +154,28 @@ def build_intervals(data, date):
     day = {}
     for k, l in data['important_timings'].items():
         intervals = []
+
+        if isinstance(l, unicode) or isinstance(l, str):
+            l = [l]  # in case of Abhijit Muhurat, l is string - u'12:35 PM – 01:28 PM'
+
         for slist in l:
             parenthesis_index = slist.rfind('(')
             if parenthesis_index > 0:
                 slist = slist[:parenthesis_index].strip()
             s = slist.split(u'–')
-            if len(s) != 2: continue
+            if len(s) != 2:
+                continue
+
             x = try_strptime(s[0].strip(), date)
             y = try_strptime(s[1].strip(), date)
+
+            # if y is less than x, it implies that x = PM and y = AM - ideally the next day - add a day to y
+            if y < x:
+                y += datetime.timedelta(days=1)
+
             i = Interval(x, y)
             intervals.append(i)
+
         intervals.sort()
         day[k] = intervals
 
@@ -192,7 +206,7 @@ def sort_and_normalize(intervals, given_start_dt, next_day):
         clean_intervals.append(interval)
 
     x = clean_intervals[0]
-    normalized_intervals = []
+    normalized_intervals = []  # merge overlapped intervals
     for y in clean_intervals[1:]:
         if y.start < x.stop:
             if y.stop > x.stop:
@@ -282,8 +296,8 @@ def main(wf):
 
     log.debug('date: {!r} - {!r}'.format(start_date, end_date))
 
-    filename = '{}-to-{}.csv'.format(start_date.strftime('%a-%d-%b-%Y'), end_date.strftime('%a-%d-%b-%Y'))
-    csv_headers = 'Date, Free, Amrit Kaal, Abhijit Muhurat, Rahu, Dur Muhurat, Varjyam, Yamaganda, Gulika, Ganda Mool Nakshatra\n'
+    filename = '{}-{}-to-{}.csv'.format(location['tz'].replace('/', '-'), start_date.strftime('%a-%d-%b-%Y'), end_date.strftime('%a-%d-%b-%Y'))
+    csv_headers = 'Date,Free,Amrit Kaal,Abhijit Muhurat,Rahu,Dur Muhurat,Varjyam,Yamaganda,Gulika,Ganda Mool Nakshatra\n'
     seperator = ','
     oneday = datetime.timedelta(seconds=86400)
 
@@ -307,10 +321,14 @@ def main(wf):
             args = [temp_date, url]
             intervals[temp_date] = wf.cached_data(cache_name, get_data_helper, max_age=cache_ttl, data_func_args=args)
 
-            data = '{}{}'.format(temp_date.strftime('%Y-%b-%d'), seperator)
+            # data = '{}{}'.format(temp_date.strftime('%Y-%b-%d'), seperator)
+            # each day is a row - instead of str append (as line above), use row list and finally join based on separator
+            row_data = []
+            row_data.append(temp_date.strftime('%Y-%b-%d'))  # first column is the date
 
             # Good time
             for key in keys:
+                column_value_intervals = []  # intervals for a specific key
                 try:
                     for interval in intervals[temp_date][key]:
                         # compute delta hours and mins
@@ -318,19 +336,27 @@ def main(wf):
                         seconds = delta.days * 86400 + delta.seconds
                         hours = seconds // 3600
                         minutes = (seconds // 60) % 60
-                        title = '{} - {} ({}h {}m)'.format(interval.start.strftime('%I:%M %p'), interval.stop.strftime('%I:%M %p'),
+                        title = '{} - {} ({}h {}m)'.format(interval.start.strftime('%I:%M %p'),
+                                                           interval.stop.strftime('%I:%M %p'),
                                                            hours, minutes)
                         subtitle = interval.start.strftime('%a, %b %d, %Y')
                         if seconds >= 86400:
                             subtitle = '{} to {}'.format(subtitle, interval.stop.strftime('%a, %b %d, %Y'))
 
-                        data = '{} > {}'.format(data, title)
-                    data = '{}{}'.format(data, seperator)
+                        # data = '{} > {}'.format(data, title) # instead of updating the string, add to a list and use join.
+                        column_value_intervals.append(title)
+                    # add column_value_intervals to row
+                    # data = '{}{}'.format(data, seperator)
+                    row_data.append('"{}"'.format('\n'.join(
+                        column_value_intervals)))  # '\n' within double quotes will be rendered as a new line in spreadsheet cell
                 except:
                     log.debug("Key not found: {}".format(key))
 
-            temp_date = temp_date + oneday # part of the while loop
-            f.write('{}\n'.format(data))
+            temp_date = temp_date + oneday  # part of the while loop
+            # write the row to the CSV file
+            # f.write('{}\n'.format(data))
+            f.write('{}\n'.format(seperator.join(row_data)))
+
     # send results to Alfred as JSON
     wf.send_feedback()
     return 0
@@ -343,7 +369,7 @@ if __name__ == u'__main__':
     local_settings = yaml.safe_load(open('.local.yml'))
     chosen_location = 'bangalore' if 'chosen_timezone' not in \
                                      local_settings.keys() else \
-                                     local_settings['chosen_timezone'].strip()
+        local_settings['chosen_timezone'].strip()
     location = config['location'][chosen_location]
-    timezone = pytz.timezone(location['tz'])
+    timezone = pytz.timezone(location['tz'])  # required to localize time - apply it on a date object
     sys.exit(wf.run(main))
