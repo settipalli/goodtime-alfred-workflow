@@ -260,6 +260,77 @@ def get_data_helper(date, url):
     results.update(day_intervals)
     return results
 
+# ==== Utility methods to merge and subtract intervals - used for meetings ====#
+def merge_subtract_intervals(intervals):
+    # Merge all and remove Rahu, Dur Muhurat and Varjyam
+    # Includes Amrit Kaal, Abhijit Muhurat, Free Time, Yamaganda and Gulika
+
+    # Logic: https://www.perplexity.ai/search/how-do-i-merge-multiple-start-nkfbkBipQv.Rp7k_4nIArg
+    def merge_intervals(temp_intervals):
+        if not temp_intervals:
+            return []
+        temp_intervals.sort(key=lambda interval: interval.start)
+        merged = [copy.deepcopy(temp_intervals[0]),]
+        for current in temp_intervals[1:]:
+            last = merged[-1]   # last is a reference, not a copy
+            if current.start <= last.stop:
+                # overlapping or adjacent
+                last.stop = max(last.stop, current.stop)    # last is a reference, changing last, changes value in merged[-1]
+            else:
+                merged.append(copy.deepcopy(current))
+        return merged
+
+    def subtract_intervals(interval, removal):
+        results = []
+        if removal.stop <= interval.start or removal.start >= interval.stop:
+            # case 1: removal interval is before or after original - no overlap
+            # covers two use-cases:
+            #   either original starts after removal, or
+            #   removal starts after original
+            results.append(interval)
+        else:
+            # overlap cases, includes all-encompassing case
+            if removal.start > interval.start:
+                results.append(Interval(interval.start, min(removal.start, interval.stop))) # add an interval object
+            if removal.stop < interval.stop:
+                results.append(Interval(max(removal.stop, interval.start), interval.stop))  # add an interval object
+            # no need to address third case: a.start > r.start and a.stop < r.stop
+            # because, we ignore remaining time in removal interval i.e. r.stop - a.stop
+            # we are only bothered with removal interval for the time it overlaps with the original
+            # any extended time in removal that does not overlap is of not concern for the original
+        return [r for r in results if r.start < r.stop]  # filter out intervals that have zero or negative length - only include those whose start < stop (not <=)
+
+    def subtract_many_intervals(available, not_available):
+        # assume both available and not-available are merged
+        result = []
+        for interval in available:
+            temp = [interval]
+            for removal in not_available:
+                new_temp = []
+                for interval_entry in temp:
+                    new_temp.extend(subtract_intervals(interval_entry, removal))
+                temp = new_temp
+                if not temp:
+                    break   # no time left in the interval
+            result.extend(temp)
+        return result
+
+    available_keys = ['Free', 'Amrit Kaal', 'Abhijit Muhurat', 'Yamaganda', 'Gulika']
+    not_available_keys = ['Rahu', 'Dur Muhurat', 'Varjyam']
+
+    available_intervals = []
+    for key in available_keys:
+        available_intervals.extend(copy.deepcopy(intervals[key]))
+
+    not_available_intervals = []
+    for key in not_available_keys:
+        not_available_intervals.extend(copy.deepcopy(intervals[key]))
+
+    merged_available_intervals = merge_intervals(available_intervals)
+    merged_not_available_intervals = merge_intervals(not_available_intervals)
+    final_intervals = subtract_many_intervals(merged_available_intervals, merged_not_available_intervals)
+    return final_intervals
+
 
 def main(wf):
     args = docopt(__doc__, wf.args, version='v0.9.0')
@@ -297,7 +368,7 @@ def main(wf):
     log.debug('date: {!r} - {!r}'.format(start_date, end_date))
 
     filename = '{}-{}-to-{}.csv'.format(location['tz'].replace('/', '-'), start_date.strftime('%a-%d-%b-%Y'), end_date.strftime('%a-%d-%b-%Y'))
-    csv_headers = 'Date,Free,Amrit Kaal,Abhijit Muhurat,Rahu,Dur Muhurat,Varjyam,Yamaganda,Gulika,Ganda Mool Nakshatra\n'
+    csv_headers = 'Date,Free,Amrit Kaal,Abhijit Muhurat,Rahu,Dur Muhurat,Varjyam,Yamaganda,Gulika,Ganda Mool Nakshatra, Conducive Intervals\n' # Conducive Intervals = merged('Free', 'Amrit Kaal', 'Abhijit Muhurat', 'Yamaganda', 'Gulika')
     seperator = ','
     oneday = datetime.timedelta(seconds=86400)
 
@@ -306,7 +377,7 @@ def main(wf):
     intervals = {}
 
     # order of keys decide the order of results.
-    keys = ['Free', 'Amrit Kaal', 'Abhijit Muhurat', 'Rahu', 'Dur Muhurat', 'Varjyam', 'Yamaganda', 'Gulika', 'Ganda Mool Nakshatra']
+    keys = ['Free', 'Amrit Kaal', 'Abhijit Muhurat', 'Rahu', 'Dur Muhurat', 'Varjyam', 'Yamaganda', 'Gulika', 'Ganda Mool Nakshatra', 'Conducive Intervals']
 
     with open(filename, 'w+') as f:
         f.write(csv_headers)
@@ -314,9 +385,14 @@ def main(wf):
         while temp_date <= end_date:
             cache_name = temp_date.strftime('%Y-%b-%d')
             cache_ttl = config['calendar']['cachettl']
-            url = config["calendar"]["urltemplate"].format(temp_date.year, temp_date.month, temp_date.day,
+
+            # use full month name in lowercase instead of number - else, it would be ignored and current month would be assumed
+            month_name_lower_case = temp_date.strftime('%B').lower()
+
+            url = config["calendar"]["urltemplate"].format(temp_date.year, month_name_lower_case, temp_date.day,
                                                            location['num'])
             log.debug("URL: {!r}".format(url))
+            # URL as of 2025-07-25-14-18 +0100: https://www.prokerala.com/general/calendar/date.php?theme=unity&year=2025&month=august&day=2&calendar=hindu&la=&sb=1&loc=2643743&ajax=1
 
             args = [temp_date, url]
             intervals[temp_date] = wf.cached_data(cache_name, get_data_helper, max_age=cache_ttl, data_func_args=args)
@@ -325,6 +401,14 @@ def main(wf):
             # each day is a row - instead of str append (as line above), use row list and finally join based on separator
             row_data = []
             row_data.append(temp_date.strftime('%Y-%b-%d'))  # first column is the date
+
+            temp_next_day = temp_date + datetime.timedelta(days=1)  # used to check if the interval.start_date is on the next day
+
+            # conducive meeting time slots - includes 'Free', 'Amrit Kaal', 'Abhijit Muhurat', 'Yamaganda', 'Gulika'
+            conducive_intervals = merge_subtract_intervals(intervals[temp_date])
+
+            # set conducive intervals as value for the key intervals[temp_date][Conducive Intervals] so that the for loop that follows automatically considers them and appends them to column_value_intervals and takes care of prefixing previous day, next day intervals with right signs
+            intervals[temp_date]['Conducive Intervals'] = conducive_intervals
 
             # Good time
             for key in keys:
@@ -339,9 +423,20 @@ def main(wf):
                         title = '{} - {} ({}h {}m)'.format(interval.start.strftime('%I:%M %p'),
                                                            interval.stop.strftime('%I:%M %p'),
                                                            hours, minutes)
+
                         subtitle = interval.start.strftime('%a, %b %d, %Y')
-                        if seconds >= 86400:
+                        if seconds >= 86400:  # for intervals spanning more than one day - e.g. Ganda Moola Nakshatra
                             subtitle = '{} to {}'.format(subtitle, interval.stop.strftime('%a, %b %d, %Y'))
+
+                        # next day or previous day intervals
+                        if interval.start >= temp_next_day:
+                            # Interval is on the next day - add a * as prefix to the title
+                            title = '+ ' + title
+                            subtitle += ' (Next Day)'
+                        elif interval.start < temp_date:
+                            # Interval is on the previous day - add a * as prefix to the title
+                            title = '- ' + title
+                            subtitle += ' (Previous Day)'
 
                         # data = '{} > {}'.format(data, title) # instead of updating the string, add to a list and use join.
                         column_value_intervals.append(title)
@@ -351,6 +446,9 @@ def main(wf):
                         column_value_intervals)))  # '\n' within double quotes will be rendered as a new line in spreadsheet cell
                 except:
                     log.debug("Key not found: {}".format(key))
+                    # Add an emtpy column when a key is not found so that a comma is inserted in the CSV, else the next column will overlap with the current column
+                    # Most of the time, 'Ganda Mool Nakshatra' would be missing - if not empty commas is inserted in the CSV, 'Conducive Intervals' values will overlap
+                    row_data.append('')     # do not add a comma, but an empty value - f.write('{}\n'.format(seperator.join(row_data))) below will take care of adding a comma (separator)
 
             temp_date = temp_date + oneday  # part of the while loop
             # write the row to the CSV file
@@ -370,6 +468,6 @@ if __name__ == u'__main__':
     chosen_location = 'bangalore' if 'chosen_timezone' not in \
                                      local_settings.keys() else \
         local_settings['chosen_timezone'].strip()
-    location = config['location'][chosen_location]
+    location = config['location'][chosen_location]  # add  a debug marker here, if we do not break here, we will not be able to break within main() method since it may run within a thread
     timezone = pytz.timezone(location['tz'])  # required to localize time - apply it on a date object
     sys.exit(wf.run(main))

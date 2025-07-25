@@ -2,6 +2,7 @@
 
 Alfred workflow that displays good times in a day based on Hindu Calendar.
 
+Set the right timezone key in `.local.yml`. All keys are defined in `config.yml`. E.g., `bangalore`, `london`, `amsterdam`.
 
 # Credits
 

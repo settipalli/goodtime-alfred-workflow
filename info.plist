@@ -91,7 +91,8 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>open -na "Brave Browser" --args --incognito "{query}"</string>
+				<string># open -na "Brave Browser" --args --incognito "{query}"
+open -na "Firefox" --args -private-window "{query}"</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>
@@ -151,7 +152,8 @@
 				<key>runningsubtext</key>
 				<string>Fetching good times</string>
 				<key>script</key>
-				<string>python app.py $1</string>
+				<string>~/.pyenv/shims/python app.py $1
+</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>

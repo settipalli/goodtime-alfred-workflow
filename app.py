@@ -302,8 +302,11 @@ def main(wf):
     # configure cache name based on the input (date)
     cache_name = date.strftime('%Y-%b-%d')
     cache_ttl = config['calendar']['cachettl']
-    url = config["calendar"]["urltemplate"].format(date.year, date.month, date.day, location['num'])
+    # use full month name in lowercase instead of number - else, it would be ignored and current month would be assumed
+    month_name_lower_case = date.strftime('%B').lower()
+    url = config["calendar"]["urltemplate"].format(date.year, month_name_lower_case, date.day, location['num'])
     # log.debug("URL: {!r}".format(url))
+    # URL as of 2025-07-25-14-18 +0100: https://www.prokerala.com/general/calendar/date.php?theme=unity&year=2025&month=august&day=2&calendar=hindu&la=&sb=1&loc=2643743&ajax=1
 
     args = [date, url]
     intervals = wf.cached_data(cache_name, get_data_helper, max_age=cache_ttl, data_func_args=args)
@@ -340,6 +343,8 @@ def main(wf):
     # order of keys decide the order of results.
     keys = ['Free', 'Amrit Kaal', 'Abhijit Muhurat', 'Ganda Mool Nakshatra', 'Rahu', 'Dur Muhurat', 'Varjyam',
             'Yamaganda', 'Gulika']
+    next_day = date + datetime.timedelta(days=1) # used to check if the interval.start_date is on the next day
+
     # Good time
     for key in keys:
         try:
@@ -353,9 +358,19 @@ def main(wf):
                                                    interval.stop.strftime('%I:%M %p'),
                                                    hours,
                                                    minutes)
+
                 subtitle = interval.start.strftime('%a, %b %d, %Y')
-                if seconds >= 86400:
+                if seconds >= 86400: # for intervals spanning more than one day - e.g. Ganda Moola Nakshatra
                     subtitle = '{} to {}'.format(subtitle, interval.stop.strftime('%a, %b %d, %Y'))
+
+                if interval.start >= next_day:
+                    # Interval is on the next day - add a * as prefix to the title
+                    title = '+ ' + title
+                    subtitle += ' (Next Day)'
+                elif interval.start < date:
+                    # Interval is on the previous day - add a * as prefix to the title
+                    title = '- ' + title
+                    subtitle += ' (Previous Day)'
 
                 wf.add_item(
                     title=unicode(title),
@@ -376,15 +391,16 @@ def main(wf):
     wf.send_feedback()
     return 0
 
+# Cache directory
+# $HOME/Library/Caches/com.runningwithcrayons.Alfred-3/Workflow Data/com.settipalli.alfred-workflow-goodtime
+
 
 if __name__ == u'__main__':
     wf = Workflow3()
     log = wf.logger
     config = yaml.safe_load(open('config.yml'))
     local_settings = yaml.safe_load(open('.local.yml'))
-    chosen_location = 'bangalore' if 'chosen_timezone' not in \
-                                     local_settings.keys() else \
-        local_settings['chosen_timezone'].strip()
+    chosen_location = 'bangalore' if 'chosen_timezone' not in local_settings.keys() else local_settings['chosen_timezone'].strip()
     location = config['location'][chosen_location]
     timezone = pytz.timezone(location['tz']) # required to localize time - apply it on a date object
     sys.exit(wf.run(main))
